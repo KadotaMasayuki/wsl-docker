@@ -32,6 +32,8 @@ wsl --install Ubuntu-22.04
 
 ## wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
+proxyのアドレスとポートは自分の環境に合わせること。
+
 ```
 # .profileにproxyを設定
 cat << EOS >> ~/.profile
@@ -187,7 +189,9 @@ PS > wsl -l -v
 PS >
 ```
 
-### Ubuntu-22.04を登録削除する
+### Ubuntu-22.04を登録解除する
+
+今まで使っていた Ubuntu-22.04 を捨てて新たに同じものを入れなおしたい、という場合、windows上でアプリと機能からアンインストール後、powershellにて次のようにする。
 
 ```
 PS > wsl --unregister Ubuntu-22.04
@@ -232,9 +236,10 @@ wsl $
 
 ### とにかくまずはproxyを設定しておく（proxy環境下でなければ不要）
 
-proxy環境下では`curl`コマンドでhttpsのURIからダウンロードしようとすると認証エラーを出したり、`apt update`コマンドがdockerのリポジトリに接続できなかったりすることがある（後述）。
+proxy環境下では`curl`コマンドでhttpsのURIからダウンロードしようとすると認証エラーを出したり、`apt update`コマンドがdockerのリポジトリに接続できなかったり、dockerがimageをダウンロードするときに失敗する、などがある（後述）。
 そのため、環境変数等にproxyを設定しておく。
-windowsが以下のproxyを使っていると前提する。
+
+windowsが以下のproxy環境のネットワークに接続していると前提する。
 
 ```
 http-proxy = http://12.3.45.67:9999
