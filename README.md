@@ -53,29 +53,6 @@ EOS
 
 # ファイルの権限設定
 sudo chmod 0644 /etc/apt/apt.conf.d/proxy.conf
-
-# dockerd用のproxy設定
-mkdir /etc/systemd/system/docker.service.d
-cat << EOS | sudo tee -a /etc/systemd/system/docker.service.d/override.conf
-[Service]
-Environment="HTTP_PROXY=http://12.34.56.78:9999" "HTTPS_PROXY=http://1.23.45.67:8901"
-EOS
-
-# ファイルの権限設定
-sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
-
-# docker client用のproxy設定
-cat << EOS >> ~/.docker/config.json
-
-{
-  "proxies": {
-    "default": {
-      "httpProxy": "http://192.168.0.10:8080",
-      "httpsProxy": "http://192.168.0.10:8080"
-    }
-  }
-}
-EOS
 ```
 
 ## wslの作業　dockerをインストールする
@@ -108,7 +85,38 @@ sudo apt-get update
 
 # dockerをインストールする
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
 
+## wslの作業　dockerのためのproxyを設定する
+
+```
+# dockerd用のproxy設定
+mkdir /etc/systemd/system/docker.service.d
+cat << EOS | sudo tee -a /etc/systemd/system/docker.service.d/override.conf
+[Service]
+Environment="HTTP_PROXY=http://12.34.56.78:9999" "HTTPS_PROXY=http://1.23.45.67:8901"
+EOS
+
+# ファイルの権限設定
+sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
+
+# docker client用のproxy設定
+cat << EOS >> ~/.docker/config.json
+
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://12.34.56.78:9999",
+      "httpsProxy": "http://1.23.45.67:8901"
+    }
+  }
+}
+EOS
+```
+
+## wslの作業　dockerを動かしてみる
+
+```
 # hello-worldイメージをダウンロードして動かしてみる
 sudo docker run hello-world
 ```
@@ -491,7 +499,7 @@ E: Unable to locate package docker-compose-plugin
 
 ### 実行してみる（失敗）
 
-あれ？　失敗する・・・
+hello-worldイメージをダウンロードして実行してみる。
 
 ```
 wsl $ sudo docker run hello-world
@@ -501,6 +509,7 @@ See 'docker run --help'.
 wsl $
 ```
 
+あれ？　失敗した。
 認証エラーっぽい。
 認証エラーと言えばproxyか
 
@@ -514,7 +523,7 @@ See 'docker run --help'.
 wsl $
 ```
 
-知らない署名がされている。とあるので、知っていることにすれば良いのだが、そのためにpemファイルなどをいっぱい入れるのも違うような気がする。
+知らない署名がされている。とあるので、知っていることにすれば良いのだが、そのためにsslでpemファイルなどをいっぱい取得して入れるのも違うような気がする。
 proxy環境ではない状態では普通に動くので、proxy設定が行き届いていないような気がする。
 
 念のため`docker info`してみる
@@ -585,6 +594,7 @@ WARNING: No blkio throttle.write_iops_device support
 ```
 
 proxyの設定がされていないことがわかった。
+
 
 ### dockerdのためのproxy設定を行う
 
@@ -797,6 +807,9 @@ For more examples and ideas, visit:
 Dockerfile中でhttpsからaptやpipで取得しようとするとHTTPS接続のエラーが出る。またしてもproxyか。
 
 ```
+wsl $ docker build -t jupyter .
+ ;
+ ;
 9.262 Could not fetch URL https://pypi.org/simple/jupyterlab/: There was a problem confirming the ssl certificate: HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url: /simple/jupyterlab/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)'))) - skipping
 9.275 ERROR: Could not find a version that satisfies the requirement jupyterlab (from versions: none)
 9.275 ERROR: No matching distribution found for jupyterlab
@@ -830,5 +843,4 @@ EOS
 ```
 
 これでDockerfileからのビルドが出来るようになる。
-
 
