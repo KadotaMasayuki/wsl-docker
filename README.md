@@ -54,7 +54,7 @@ EOS
 # ファイルの権限設定
 sudo chmod 0644 /etc/apt/apt.conf.d/proxy.conf
 
-# docker用のproxy設定
+# dockerd用のproxy設定
 mkdir /etc/systemd/system/docker.service.d
 cat << EOS | sudo tee -a /etc/systemd/system/docker.service.d/override.conf
 [Service]
@@ -63,6 +63,19 @@ EOS
 
 # ファイルの権限設定
 sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
+
+# docker client用のproxy設定
+cat << EOS >> ~/.docker/config.json
+
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://192.168.0.10:8080",
+      "httpsProxy": "http://192.168.0.10:8080"
+    }
+  }
+}
+EOS
 ```
 
 ## wslの作業　dockerをインストールする
@@ -476,7 +489,7 @@ E: Unable to locate package docker-buildx-plugin
 E: Unable to locate package docker-compose-plugin
 ```
 
-### 実行してみる
+### 実行してみる（失敗）
 
 あれ？　失敗する・・・
 
@@ -488,7 +501,10 @@ See 'docker run --help'.
 wsl $
 ```
 
-proxyを直書きしてみてもダメだな・・
+認証エラーっぽい。
+認証エラーと言えばproxyか
+
+でも、proxyを下記のように直書きしてみてもダメ。
 
 ```
 wsl $ sudo docker run --env HTTPS_PROXY="http://12.34.56.78:9999" hello-world
@@ -498,10 +514,10 @@ See 'docker run --help'.
 wsl $
 ```
 
-知らない署名がされている。とあるので、知っていることにすれば良いだけか？
+知らない署名がされている。とあるので、知っていることにすれば良いのだが、そのためにpemファイルなどをいっぱい入れるのも違うような気がする。
+proxy環境ではない状態では普通に動くので、proxy設定が行き届いていないような気がする。
 
-
-`docker info`してみる
+念のため`docker info`してみる
 
 ```
 wsl $ docker info
@@ -568,7 +584,10 @@ WARNING: No blkio throttle.read_iops_device support
 WARNING: No blkio throttle.write_iops_device support
 ```
 
-proxyの設定がされていないので設定する。
+proxyの設定がされていないことがわかった。
+
+### dockerdのためのproxy設定を行う
+
 設定先を確認するため、dockerdを起動しているプログラムを確認する。
 systemdで動いている場合はsystemctlコマンドに表示されるはず。
 
@@ -647,6 +666,9 @@ wsl $ sudo systemctl restart docker
 ```
  
 無事proxyの設定がされているようだ。
+
+### 実行してみる（成功）
+
 いよいよ起動してみる。
 
 ```
@@ -768,3 +790,45 @@ For more examples and ideas, visit:
 ```
 
 成功！
+
+
+### docker clientにもproxyを設定する
+
+Dockerfile中でhttpsからaptやpipで取得しようとするとHTTPS接続のエラーが出る。またしてもproxyか。
+
+```
+9.262 Could not fetch URL https://pypi.org/simple/jupyterlab/: There was a problem confirming the ssl certificate: HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url: /simple/jupyterlab/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)'))) - skipping
+9.275 ERROR: Could not find a version that satisfies the requirement jupyterlab (from versions: none)
+9.275 ERROR: No matching distribution found for jupyterlab
+9.384 Could not fetch URL https://pypi.org/simple/pip/: There was a problem confirming the ssl certificate: HTTPSConnectionPool(host='pypi.org', port=443): Max retries exceeded with url: /simple/pip/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)'))) - skipping
+------
+Dockerfile:13
+--------------------
+  11 |     # pip install
+  12 |     RUN pip3 install --upgrade pip
+  13 | >>> RUN pip3 install jupyterlab
+  14 |     RUN pip3 install pandas
+  15 |     RUN pip3 install mecab-python3
+--------------------
+ERROR: failed to solve: process "/bin/sh -c pip3 install jupyterlab" did not complete successfully: exit code: 1
+```
+
+docker clientにもproxy設定が必要なので、`~/.docker/config.json`にproxyを設定する。
+
+```
+wsl $ cat << EOS >> ~/.docker/config.json
+
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://192.168.0.10:8080",
+      "httpsProxy": "http://192.168.0.10:8080"
+    }
+  }
+}
+EOS
+```
+
+これでDockerfileからのビルドが出来るようになる。
+
+
