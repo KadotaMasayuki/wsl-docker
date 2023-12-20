@@ -12,10 +12,7 @@ Windows10 Pro ver 22H2 (OS build 19045.3693)
 # express : 取り急ぎコマンドのみ
 
 
-## proxy環境のwindowsで、wsl2にdockerを入れる！
-
-
-### powershellでの作業　wslをインストールする
+## powershellでの作業　wslをインストールする
 
 ```
 # インストールできる一覧を表示
@@ -33,7 +30,7 @@ wsl --install Ubuntu-22.04
 # 名前とパスワードを聞かれるので入力すれば終了
 ```
 
-### wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
+## wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
 ```
 # .profileにproxyを設定
@@ -66,7 +63,7 @@ EOS
 sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
 ```
 
-### wslの作業　dockerをインストールする
+## wslの作業　dockerをインストールする
 
 docker公式の手順に従う。
 
@@ -101,7 +98,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 sudo docker run hello-world
 ```
 
-### dockerをsudo無しで利用するための設定を行う
+## dockerをsudo無しで利用するための設定を行う
 
 wslでの作業
 
