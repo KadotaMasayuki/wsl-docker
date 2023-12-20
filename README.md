@@ -4,10 +4,18 @@ proxy環境下での windows-wsl に docker を導入する。
 proxy環境下では特に導入に手間取るため、記録がてら残す。
 
 
+## 環境
+
+Windows10 Pro ver 22H2 (OS build 19045.3693)
+
+
 # express : 取り急ぎコマンドのみ
 
 
-## express : powershellでの作業　wslをインストールする
+## proxy環境のwindowsで、wsl2にdockerを入れる！
+
+
+### powershellでの作業　wslをインストールする
 
 ```
 # インストールできる一覧を表示
@@ -25,7 +33,7 @@ wsl --install Ubuntu-22.04
 # 名前とパスワードを聞かれるので入力すれば終了
 ```
 
-## express : wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
+### wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
 ```
 # .profileにproxyを設定
@@ -58,7 +66,7 @@ EOS
 sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
 ```
 
-## express : wslの作業　dockerをインストールする
+### wslの作業　dockerをインストールする
 
 docker公式の手順に従う。
 
@@ -90,11 +98,55 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # hello-worldイメージをダウンロードして動かしてみる
+sudo docker run hello-world
+```
+
+### dockerをsudo無しで利用するための設定を行う
+
+wslでの作業
+
+```
+# hello-worldイメージをsudo無しで動かしてみる（失敗する）
 docker run hello-world
 ```
 
+dockerクライアントを実行できる権限が無いので、dockerクライアントを実行できるグループに自分を所属させる
 
-# step by step : 順次説明を付けながら
+```
+# sudo無しでdockerクライアントを動かすために、自分をdockerグループに所属させる
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
+# ubuntuを終了する
+exit
+```
+
+powershellでの作業
+
+```
+# 起動していたwsl側のディストリビューション名を確認する
+wsl -l -v
+
+# 対象のディストリビューションを終了する
+wsl -t Ubuntu-22.04
+```
+
+windowsでの作業
+
+Ubuntu-22.04のアイコンをクリックするなどして起動すると、再起動完了。
+
+wslでの作業
+
+```
+# hello-worldイメージをsudo無しで動かしてみる（成功する）
+docker run hello-world
+```
+
+以上
+
+
+
+# step by step で解説
 
 
 ## wslをインストールする
@@ -104,7 +156,6 @@ linuxディストリビューションも指定できる。
 `wsl -l -o`でインストールできるディストリビューションのリストが表示される。
 すでにインストール済みのものは入れられないので、`wsl -l -v`でインストール済みか確認。
 インストール済みだけど入れなおしたいときは、windowsメニューのアプリと機能からアンインストール後、`wsl --unregister ナントカ`で登録削除してから。
-
 
 ### インストールできる一覧を表示
 
@@ -629,3 +680,89 @@ wsl $
 
 よし、成功！
 
+
+### dockerクライアントをsudo無しで利用するための設定を行う
+
+hello-worldイメージをsudo無しで動かしてみる（失敗する）
+
+```
+wsl $ docker run hello-world
+```
+
+dockerクライアントを実行できる権限が無いので、dockerクライアントを実行できるグループに自分を所属させる
+
+```
+wsl $ sudo groupadd docker
+wsl $ sudo usermod -aG docker $USER
+```
+
+設定できたか確認する
+```
+wsl $ cat /etc/group
+root:x:0:
+daemon:x:1:
+bin:x:2:
+sys:x:3:
+ ;
+ ;
+netdev:x:116:自分のユーザー名
+自分のユーザー名:x:1000:
+docker:x:999:自分のユーザー名
+```
+
+設定できているので、ubuntuを再起動するために、いったんexitする。
+
+```
+wsl $ exit
+```
+
+powershellで、wslコマンドを使って再起動する。
+
+もしも、起動していたwsl側のディストリビューション名を忘れた場合は以下で確認。
+
+```
+PS > wsl -l -v
+  NAME            STATE           VERSION
+* Ubuntu-22.04    Running         2
+  Debian          Running         2
+```
+
+対象のディストリビューションを`wsl -t`で終了する
+
+```
+PS > wsl -t Ubuntu-22.04
+PS > wsl -l -v
+  NAME            STATE           VERSION
+* Ubuntu-22.04    Stopped         2
+  Debian          Running         2
+```
+
+windowsで、Ubuntu-22.04のアイコンをクリックするなどして起動すると、再起動完了。
+hello-worldイメージをsudo無しで動かしてみる。
+
+```
+wsl $ docker run hello-world
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+```
+
+成功！
