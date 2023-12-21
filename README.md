@@ -852,7 +852,8 @@ For more examples and ideas, visit:
 
 ### docker clientにもproxyを設定する
 
-Dockerfile中でhttpsからaptやpipで取得しようとするとHTTPS接続のエラーが出る。またしてもproxyか。
+Dockerfile中でhttpsからaptやpipで取得しようとしたり、コンテナ内でhttps接続しようとすると、エラーが出る。
+またしてもproxyか。
 
 ```
 wsl $ docker build -t jupyter .
