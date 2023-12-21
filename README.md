@@ -11,25 +11,26 @@ Windows10 Pro ver 22H2 (OS build 19045.3693)
 ## 作業ダイジェスト
 
 - powershellからwslをインストールする。
-- linuxディストリビューション上にdockerをインストールする。
-- curlコマンドが、dockerの暗号キーを取得するためhttpsアクセスをするが、proxy下では認証できないため、`~/.profile`にproxy環境変数を設定する。
-- aptコマンドが、dockerリポジトリにアクセスするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/apt/apt.conf.d/proxy.conf`にproxy環境変数を設定する。
-- dockerdサービスが、dockerのレジストリサーバーからイメージをダウンロードするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/systemd/system/docker.service.d`にproxy環境変数を設定する。
-- dockerクライアントが、Dockerfile中またはコンテナ内でhttps接続する際、proxy下では認証できないため、`~/.docker/config.json`にproxy環境変数を設定する。
-- 一般ユーザー権限でdockerコマンドを使うために、`dockerグループ`に所属させる。
+- wslに好みのlinuxディストリビューションをインストールする。
+- linux上のcurlコマンドが、dockerの暗号キーを取得するためhttpsアクセスをするが、proxy下では認証できないため、`~/.profile`にproxy環境変数を設定する。
+- linux上のaptコマンドが、dockerリポジトリにアクセスするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/apt/apt.conf.d/proxy.conf`にproxy環境変数を設定する。
+- linuxにdockerをインストールする。
+- linux上のdockerdサービスが、dockerのレジストリサーバーからイメージをダウンロードするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/systemd/system/docker.service.d`にproxy環境変数を設定する。
+- linux上のdockerクライアントが、Dockerfile中またはコンテナ内でhttps接続する際、proxy下では認証できないため、`~/.docker/config.json`にproxy環境変数を設定する。
+- linux上の一般ユーザー権限でdockerコマンドを使うために、`dockerグループ`に所属させる。
 - linuxディストリビューションを再起動する。
 
 
 # express : 取り急ぎコマンドのみ
 
 
-## powershellでの作業　wslをインストールする
+## powershellでの作業　wslとlinuxディストリビューションをインストールする
 
 ```
-# インストールできる一覧を表示
+# インストールできるlinuxディストリビューションの一覧を表示
 wsl -l -o
 
-# インストール済みのディストリビューションとその状態
+# インストール済みのディストリビューションとその状態を確認する
 wsl -l -v
 
 # Ubuntu-22.04が入っていて、それを削除したい場合
@@ -41,7 +42,7 @@ wsl --install Ubuntu-22.04
 # 名前とパスワードを聞かれるので入力すれば終了
 ```
 
-## wslの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
+## wsl上のlinuxでの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
 proxyのアドレスとポートは自分の環境に合わせること。
 
@@ -66,7 +67,7 @@ EOS
 sudo chmod 0644 /etc/apt/apt.conf.d/proxy.conf
 ```
 
-## wslの作業　dockerをインストールする
+## wsl上のlinuxでの作業　dockerをインストールする
 
 docker公式の手順に従う。
 
@@ -98,7 +99,7 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-## wslの作業　dockerのためのproxyを設定する（proxy環境下ではない場合は不要）
+## wsl上のlinuxでの作業　dockerのためのproxyを設定する（proxy環境下ではない場合は不要）
 
 ```
 # dockerd用のproxy設定
@@ -125,7 +126,7 @@ cat << EOS >> ~/.docker/config.json
 EOS
 ```
 
-## wslの作業　dockerを動かしてみる
+## wsl上のlinuxでの作業　dockerを動かしてみる
 
 ```
 # hello-worldイメージをダウンロードして動かしてみる
@@ -134,7 +135,7 @@ sudo docker run hello-world
 
 ## dockerをsudo無しで利用するための設定を行う
 
-wslでの作業
+### wsl上のlinuxでの作業
 
 ```
 # hello-worldイメージをsudo無しで動かしてみる（失敗する）
@@ -152,7 +153,7 @@ sudo usermod -aG docker $USER
 exit
 ```
 
-powershellでの作業
+### powershellでの作業
 
 ```
 # 起動していたwsl側のディストリビューション名を確認する
@@ -162,11 +163,11 @@ wsl -l -v
 wsl -t Ubuntu-22.04
 ```
 
-windowsでの作業
+### windowsでの作業
 
 Ubuntu-22.04のアイコンをクリックするなどして起動すると、再起動完了。
 
-wslでの作業
+### wsl上のlinuxでの作業
 
 ```
 # hello-worldイメージをsudo無しで動かしてみる（成功する）
@@ -179,6 +180,10 @@ docker run hello-world
 
 # step by step で解説
 
+`PS >`で始まる行はpowershellのコマンドラインを示す。
+`wsl $`で始まる行はwsl上のlinuxのコマンドラインを示す。
+
+
 ## wslをインストールする
 
 wslをmicrosoft storeなどでインストールする。
@@ -187,7 +192,7 @@ wslをmicrosoft storeなどでインストールする。
 
 ### インストールできるlinuxディストリビューションの一覧を表示
 
-linuxディストリビューションはUbuntu-xxで動作確認済み。Debianや他のディストリビューションでも同じやり方で動くはず。
+linuxディストリビューションはUbuntu-22.04で動作確認済み。Debianや他のディストリビューションでも同じやり方で動くはず。
 
 ```
 PS > wsl -l -o
