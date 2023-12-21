@@ -1,12 +1,23 @@
 # proxy環境のwindowsで、wsl2にdockerを入れる！
 
-proxy環境下での windows-wsl に docker を導入する。
-proxy環境下では特に導入に手間取るため、記録がてら残す。
+proxy環境下で windows-wsl に docker を導入しようとすると認証エラーで非常に手間取るため、記録がてら残す。
 
 
 ## 環境
 
 Windows10 Pro ver 22H2 (OS build 19045.3693)
+
+
+## 作業ダイジェスト
+
+- powershellからwslをインストールする。
+- linuxディストリビューション上にdockerをインストールする。
+- curlコマンドが、dockerの暗号キーを取得するためhttpsアクセスをするが、proxy下では認証できないため、`~/.profile`にproxy環境変数を設定する。
+- aptコマンドが、dockerリポジトリにアクセスするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/apt/apt.conf.d/proxy.conf`にproxy環境変数を設定する。
+- dockerdサービスが、dockerのレジストリサーバーからイメージをダウンロードするためにhttpsアクセスするが、proxy下では認証できないため、`/etc/systemd/system/docker.service.d`にproxy環境変数を設定する。
+- dockerクライアントが、Dockerfile中またはコンテナ内でhttps接続する際、proxy下では認証できないため、`~/.docker/config.json`にproxy環境変数を設定する。
+- 一般ユーザー権限でdockerコマンドを使うために、`dockerグループ`に所属させる。
+- linuxディストリビューションを再起動する。
 
 
 # express : 取り急ぎコマンドのみ
@@ -168,16 +179,15 @@ docker run hello-world
 
 # step by step で解説
 
-
 ## wslをインストールする
 
-powershellからwslをインストールする。
-linuxディストリビューションも指定できる。
-`wsl -l -o`でインストールできるディストリビューションのリストが表示される。
-すでにインストール済みのものは入れられないので、`wsl -l -v`でインストール済みか確認。
-インストール済みだけど入れなおしたいときは、windowsメニューのアプリと機能からアンインストール後、`wsl --unregister ナントカ`で登録削除してから。
+wslをmicrosoft storeなどでインストールする。
 
-### インストールできる一覧を表示
+## linuxディストリビューションをインストールする
+
+### インストールできるlinuxディストリビューションの一覧を表示
+
+linuxディストリビューションはUbuntu-xxで動作確認済み。Debianや他のディストリビューションでも同じやり方で動くはず。
 
 ```
 PS > wsl -l -o
@@ -202,6 +212,8 @@ openSUSE-Tumbleweed                    openSUSE Tumbleweed
 
 ### インストール済みのディストリビューションの状態
 
+すでにインストール済みのものは入れられないので、`wsl -l -v`でインストール済みか確認。
+
 ```
 PS > wsl -l -v
   NAME            STATE           VERSION
@@ -212,7 +224,9 @@ PS >
 
 ### Ubuntu-22.04を登録解除する
 
-今まで使っていた Ubuntu-22.04 を捨てて新たに同じものを入れなおしたい、という場合、windows上でアプリと機能からアンインストール後、powershellにて次のようにする。
+インストール済みだけど入れなおしたいときは、windowsメニューのアプリと機能からアンインストール後、`wsl --unregister ナントカ`で登録削除してから再度インストールする。
+
+たとえば、今まで使っていた Ubuntu-22.04 を捨てて新たに同じものを入れなおしたい、という場合、windows上でアプリと機能からアンインストール後、powershellにて次のようにする。
 
 ```
 PS > wsl --unregister Ubuntu-22.04
@@ -288,7 +302,7 @@ wsl $
 wsl $ echo $http_proxy
 http://12.3.45.67:9999
 
-wsl $ https_proxy
+wsl $ echo $https_proxy
 http://1.23.45.67.8901
 
 wsl $
@@ -510,8 +524,8 @@ wsl $
 ```
 
 あれ？　失敗した。
-認証エラーっぽい。
-認証エラーと言えばproxyか
+docker daemonが認証エラーしたっぽい。
+認証エラーと言えばproxyか？
 
 でも、proxyを下記のように直書きしてみてもダメ。
 
@@ -640,7 +654,7 @@ EOS
 wsl $ sudo chmod 0644 /etc/systemd/system/docker.service.d/override.conf
 ```
 
-dockerを再起動する。
+docker daemonを再起動する。
 
 ```
 wsl $ sudo systemctl restart docker
