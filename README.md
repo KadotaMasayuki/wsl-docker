@@ -142,10 +142,10 @@ sudo docker run hello-world
 docker run hello-world
 ```
 
-dockerクライアントを実行できる権限が無いので、dockerクライアントを実行できるグループに自分を所属させる
+dockerを利用できる権限が無いので、dockerグループに自分を所属させる
 
 ```
-# sudo無しでdockerクライアントを動かすために、自分をdockerグループに所属させる
+# sudo無しでdockerを利用するために、自分をdockerグループに所属させる
 sudo groupadd docker
 sudo usermod -aG docker $USER
 
