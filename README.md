@@ -649,10 +649,10 @@ Dec 20 08:58:16 PC_NAME dockerd[241]: time="2023-12-20T08:58:16.165194500+09:00"
 Dec 20 08:58:16 PC_NAME systemd[1]: Started Docker Application Container Engine.
 ```
 
-表示されたので、systemd配下に設定を作る。
+表示されたので、systemd配下で動いていることがわかった。systemd配下に設定を作る。
 
-`/etc/systemd/system/docker.service.d/override.conf`にproxyを設定する。
 `/etc/systemd/system/docker.serivce`ファイルに書く場合は、すべての設定も記載しなければならない。docker.serviceファイルにproxyだけ書いた場合、dockerが起動しない。
+proxyだけ追加などの用途の場合は、`/etc/systemd/system/docker.service.d/override.conf`に記載する。
 
 ```
 wsl $ mkdir /etc/systemd/system/docker.service.d
@@ -670,7 +670,8 @@ wsl $ sudo systemctl restart docker
 Warning: The unit file, source configuration file or drop-ins of docker.service changed on disk. Run 'systemctl daemon-reload' to reload units.
 ```
 
-設定が変わったから設定ファイルを読み直せと言われたのでそのとおりにする。
+設定が変わったから設定ファイルを読み直せ、と警告された。
+そのとおりにする。
 
 ```
 wsl $ sudo systemctl daemon-reload
@@ -686,7 +687,7 @@ wsl $ sudo systemctl restart docker
  CPUs: 8
  Total Memory: 7.719GiB
  Name: PC_NAME
- ID: 6f240f4d-8d1a-4285-a46a-e7ddbd8f37cd
+ ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
  Docker Root Dir: /var/lib/docker
  Debug Mode: false
  HTTP Proxy: http://12.34.56.78:9999
@@ -698,7 +699,7 @@ wsl $ sudo systemctl restart docker
  ;
 ```
  
-無事proxyの設定がされているようだ。
+無事proxyの設定がされたようだ。
 
 ### 実行してみる（成功）
 
@@ -744,16 +745,40 @@ hello-worldイメージをsudo無しで動かしてみる（失敗する）
 
 ```
 wsl $ docker run hello-world
+Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/images/json": dial unix /var/run/docker.sock: connect: permission denied
 ```
 
-dockerクライアントを実行できる権限が無いので、dockerクライアントを実行できるグループに自分を所属させる
+dockerを利用できる権限が無いと言われる。
+sudoを付けずに利用するためには、dockerグループに自分を所属させる必要がある。
+`getent`コマンドでdockerグループの所属員を見てみると、自分が含まれていないことが分かる。
+
+```
+wsl $ getent group docker
+docker:x:999:
+```
+
+もし、dockerグループが無ければ作る。
 
 ```
 wsl $ sudo groupadd docker
+```
+
+dockerグループに自分を追加する。
+
+```
 wsl $ sudo usermod -aG docker $USER
 ```
 
 設定できたか確認する
+
+```
+wsl $ getent group docker
+docker:x:999:自分のユーザー名
+```
+
+または、
+
+
 ```
 wsl $ cat /etc/group
 root:x:0:
