@@ -98,7 +98,7 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-## wslの作業　dockerのためのproxyを設定する
+## wslの作業　dockerのためのproxyを設定する（proxy環境下ではない場合は不要）
 
 ```
 # dockerd用のproxy設定
