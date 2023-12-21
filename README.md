@@ -219,6 +219,10 @@ openSUSE-Tumbleweed                    openSUSE Tumbleweed
 
 すでにインストール済みのものは入れられないので、`wsl -l -v`でインストール済みか確認。
 
+ここでは`Ubuntu-22.04`と`Debian`がインストールされていることが分かる。
+
+また、`Ubuntu-22.04`は停止中、`Debian`は起動中であることが分かる。
+
 ```
 PS > wsl -l -v
   NAME            STATE           VERSION
