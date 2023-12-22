@@ -766,7 +766,8 @@ hello-worldイメージをsudo無しで動かしてみる（失敗する）
 
 ```
 wsl $ docker run hello-world
-Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/images/json": dial unix /var/run/docker.sock: connect: permission denied
+docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/create": dial unix /var/run/docker.sock: connect: permission denied.
+See 'docker run --help'.
 ```
 
 dockerを利用できる権限が無いと言われる。
