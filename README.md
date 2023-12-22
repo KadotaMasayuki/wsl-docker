@@ -7,6 +7,27 @@ proxy環境下で windows-wsl に docker を導入しようとすると認証エ
 
 Windows10 Pro ver 22H2 (OS build 19045.3693)
 
+WSL2
+
+```
+PS > wsl -v
+WSL バージョン: 2.0.9.0
+カーネル バージョン: 5.15.133.1-1
+WSLg バージョン: 1.0.59
+MSRDC バージョン: 1.2.4677
+Direct3D バージョン: 1.611.1-81528511
+DXCore バージョン: 10.0.25131.1002-220531-1700.rs-onecore-base2-hyp
+Windows バージョン: 10.0.19045.3693
+```
+
+Ubuntu-22.04.3 LTS
+
+```
+wsl $ uname -a
+Linux PC_NAME 5.15.133.1-microsoft-standard-WSL2 #1 SMP Thu Oct 5 21:02:42 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+wsl $ docker -v
+Docker version 24.0.7, build afdd53b
+```
 
 ## 作業ダイジェスト
 
