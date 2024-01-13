@@ -1,7 +1,8 @@
 # proxy環境のwindowsで、wsl2にdockerを入れる！
 
+:::note info
 proxy環境下で windows-wsl に docker を導入しようとすると認証エラーで非常に手間取るため、記録がてら残す。
-
+:::
 
 ## 環境
 
@@ -42,6 +43,9 @@ Docker version 24.0.7, build afdd53b
 - linuxディストリビューションを再起動する。
 
 
+***
+
+
 # express : 取り急ぎコマンドのみ
 
 
@@ -58,14 +62,16 @@ wsl -l -v
 wsl --unregister Ubuntu-22.04
 
 # Ubuntu-22.04をインストール（好きなのを入れる）
-wsl --install Ubuntu-22.04
+wsl --install -d Ubuntu-22.04
 
 # 名前とパスワードを聞かれるので入力すれば終了
 ```
 
 ## wsl上のlinuxでの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
+:::note info
 proxyのアドレスとポートは自分の環境に合わせること。
+:::
 
 ```
 # .profileにproxyを設定
@@ -150,7 +156,7 @@ EOS
 ## wsl上のlinuxでの作業　dockerを動かしてみる
 
 ```
-# hello-worldイメージをダウンロードして動かしてみる
+# hello-worldイメージが動くことを確認する
 sudo docker run hello-world
 ```
 
@@ -158,12 +164,9 @@ sudo docker run hello-world
 
 ### wsl上のlinuxでの作業
 
-```
-# hello-worldイメージをsudo無しで動かしてみる（失敗する）
-docker run hello-world
-```
-
-dockerを利用できる権限が無いので、dockerグループに自分を所属させる
+:::note info
+sudo無しではdockerを利用できないため、dockerグループに自分を所属させて実行権限をつける
+:::
 
 ```
 # sudo無しでdockerを利用するために、自分をdockerグループに所属させる
@@ -197,6 +200,8 @@ docker run hello-world
 
 以上
 
+
+***
 
 
 # step by step で解説
@@ -341,7 +346,8 @@ wsl $
 これで、curlでhttpsアクセスできるようになる。
 
 
-#### 【ヒント】proxy下でcurlコマンドを使う時、proxy環境変数を設定しておかないと、https接続でエラーが出る
+:::note info
+【ヒント】proxy下でcurlコマンドを使う時、proxy環境変数を設定しておかないと、https接続でエラーが出る
 
 ```
 wsl $ curl https://google.com
@@ -358,6 +364,7 @@ how to fix it, please visit the web page mentioned above.
 ```
 wsl $ curl --proxy 12.34.56.78:9999 https://google.com
 ```
+:::
 
 
 #### aptのためのproxy設定をする
@@ -376,7 +383,8 @@ wsl $
 これで、aptでdockerリポジトリのupdateができるようになる。
 
 
-#### 【ヒント】proxy下でaptコマンドを使う時、proxy環境変数を設定しておかないと、dockerのaptリポジトリ(https接続)でエラーが出る
+:::note info
+【ヒント】proxy下でaptコマンドを使う時、proxy環境変数を設定しておかないと、dockerのaptリポジトリ(https接続)でエラーが出る
 
 ```
 wsl $ sudo apt-get update
@@ -452,6 +460,7 @@ N: Updating from such a repository can't be done securely, and is therefore disa
 N: See apt-secure(8) manpage for repository creation and user configuration details.
 wsl $
 ```
+:::
 
 
 ## docker を ubuntu にインストールする
@@ -519,7 +528,8 @@ wsl $ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-p
 wsl $
 ```
 
-#### 【ヒント】apt updateが失敗した状態でapt installするとこんなエラーが出る
+:::note info
+【ヒント】apt updateが失敗した状態でapt installするとこんなエラーが出る
 
 dockerのリポジトリを追加したがapt updateが成功していない状態だと、ダウンロード先が分からないため、docker-ceなんてどこにあるの？　と言われる。
 
@@ -540,10 +550,15 @@ E: Couldn't find any package by regex 'containerd.io'
 E: Unable to locate package docker-buildx-plugin
 E: Unable to locate package docker-compose-plugin
 ```
+:::
 
-### 実行してみる（失敗）
 
-hello-worldイメージをダウンロードして実行してみる。
+### dockerdのためのproxy設定を行う
+
+wsl/linuxへのproxy設定だけでは、dockerdがリポジトリ取得を失敗するため、dockerd用にもproxy設定する必要がある。
+
+:::note info
+試しに、hello-worldイメージをダウンロードして実行してみる。
 
 ```
 wsl $ sudo docker run hello-world
@@ -553,11 +568,8 @@ See 'docker run --help'.
 wsl $
 ```
 
-あれ？　失敗した。
 docker daemonが認証エラーしたっぽい。
-認証エラーと言えばproxyか？
-
-でも、proxyを下記のように直書きしてみてもダメ。
+認証エラーと言えばproxyだろうということで、proxyをコマンドに直書きしてみてもダメ。
 
 ```
 wsl $ sudo docker run --env HTTPS_PROXY="http://12.34.56.78:9999" hello-world
@@ -568,7 +580,7 @@ wsl $
 ```
 
 知らない署名がされている。とあるので、知っていることにすれば良いのだが、そのためにsslでpemファイルなどをいっぱい取得して入れるのも違うような気がする。
-proxy環境ではない状態では普通に動くので、proxy設定が行き届いていないような気がする。
+proxy環境ではない状態では普通に動くので、wsl/linux上での一般的なproxy設定だけでなく、dockerd用のproxy設定も必要な気がする。
 
 念のため`docker info`してみる
 
@@ -637,12 +649,11 @@ WARNING: No blkio throttle.read_iops_device support
 WARNING: No blkio throttle.write_iops_device support
 ```
 
-proxyの設定がされていないことがわかった。
+dockerdにproxyの設定がされていないことがわかる。
+:::
 
 
-### dockerdのためのproxy設定を行う
-
-設定先を確認するため、dockerdを起動しているプログラムを確認する。
+dockerdを管理しているプログラムに応じてその設定先が異なるため、dockerdを起動しているプログラムを確認する。
 systemdで動いている場合はsystemctlコマンドに表示されるはず。
 
 ```
@@ -721,6 +732,7 @@ wsl $ sudo systemctl restart docker
 ```
  
 無事proxyの設定がされたようだ。
+
 
 ### 実行してみる（成功）
 
