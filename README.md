@@ -1,8 +1,7 @@
 # proxy環境のwindowsで、wsl2にdockerを入れる！
 
-:::note info
 proxy環境下で windows-wsl に docker を導入しようとすると認証エラーで非常に手間取るため、記録がてら残す。
-:::
+
 
 ## 環境
 
@@ -29,6 +28,14 @@ Linux PC_NAME 5.15.133.1-microsoft-standard-WSL2 #1 SMP Thu Oct 5 21:02:42 UTC 2
 wsl $ docker -v
 Docker version 24.0.7, build afdd53b
 ```
+
+> [!NOTE]
+> Debianでの差異も記述してあります。
+> 
+> $ cat /etc/os-release
+> PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+>   ;
+
 
 ## 作業ダイジェスト
 
@@ -69,9 +76,7 @@ wsl --install -d Ubuntu-22.04
 
 ## wsl上のlinuxでの作業　proxy環境変数を設定する（proxy環境下ではない場合は不要）
 
-:::note info
 proxyのアドレスとポートは自分の環境に合わせること。
-:::
 
 ```
 # .profileにproxyを設定
@@ -113,10 +118,10 @@ sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-:::note info
-Debianのときは上記gpgの入手先が異なり、上記のままでやると`apt-get update`が失敗するので、公式のDebianのページを確認。
-https://docs.docker.com/engine/install/debian/
-:::
+
+> [!NOTE]
+> Debianのときは上記gpgの入手先が異なり、上記のままでやると`apt-get update`が失敗するので、公式のDebianのページを確認。https://docs.docker.com/engine/install/debian/
+
 
 # dockerのリポジトリをaptに追加する
 echo \
@@ -169,9 +174,7 @@ sudo docker run hello-world
 
 ### wsl上のlinuxでの作業
 
-:::note info
 sudo無しではdockerを利用できないため、dockerグループに自分を所属させて実行権限をつける
-:::
 
 ```
 # sudo無しでdockerを利用するために、自分をdockerグループに所属させる
@@ -351,8 +354,9 @@ wsl $
 これで、curlでhttpsアクセスできるようになる。
 
 
-:::note info
-【ヒント】proxy下でcurlコマンドを使う時、proxy環境変数を設定しておかないと、https接続でエラーが出る
+##### proxy環境下でcurlコマンドでhttps接続するとエラーになる
+
+proxy下でcurlコマンドを使う時、proxy環境変数を設定しておかないと、https接続でエラーが出る
 
 ```
 wsl $ curl https://google.com
@@ -369,7 +373,6 @@ how to fix it, please visit the web page mentioned above.
 ```
 wsl $ curl --proxy 12.34.56.78:9999 https://google.com
 ```
-:::
 
 
 #### aptのためのproxy設定をする
@@ -388,8 +391,9 @@ wsl $
 これで、aptでdockerリポジトリのupdateができるようになる。
 
 
-:::note info
-【ヒント】proxy下でaptコマンドを使う時、proxy環境変数を設定しておかないと、dockerのaptリポジトリ(https接続)でエラーが出る
+##### proxy環境下でaptコマンドでhttps接続するとエラーになる
+
+proxy下でaptコマンドを使う時、proxy環境変数を設定しておかないと、dockerのaptリポジトリ(https接続)でエラーが出る
 
 ```
 wsl $ sudo apt-get update
@@ -465,7 +469,6 @@ N: Updating from such a repository can't be done securely, and is therefore disa
 N: See apt-secure(8) manpage for repository creation and user configuration details.
 wsl $
 ```
-:::
 
 
 ## docker を ubuntu にインストールする
@@ -499,7 +502,8 @@ wsl $ sudo chmod a+r /etc/apt/keyrings/docker.gpg
 wsl $
 ```
 
-:::note info
+#### UbuntuではなくDebianの場合
+
 もし`Ubuntu`ではなく`Debian`の場合、`wsl $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg`とすると、apt-get updateで下記のようなエラーが出る。
 
 ```
@@ -519,9 +523,8 @@ wsl $
 ```
 
 Debianの場合は https://docs.docker.com/engine/install/debian/ を参考にする。
-:::
 
-dockerのリポジトリをaptに追加しておく。
+### dockerのリポジトリをaptに追加しておく。
 
 ```
 wsl $ echo \
@@ -555,8 +558,7 @@ wsl $ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-p
 wsl $
 ```
 
-:::note info
-【ヒント】apt updateが失敗した状態でapt installするとこんなエラーが出る
+#### 【ヒント】apt updateが失敗した状態でapt installするとこんなエラーが出る
 
 dockerのリポジトリを追加したがapt updateが成功していない状態だと、ダウンロード先が分からないため、docker-ceなんてどこにあるの？　と言われる。
 
@@ -577,8 +579,6 @@ E: Couldn't find any package by regex 'containerd.io'
 E: Unable to locate package docker-buildx-plugin
 E: Unable to locate package docker-compose-plugin
 ```
-:::
-
 
 ### dockerでhello worldしてみる
 
@@ -640,7 +640,8 @@ Server:
 
 wsl/linuxへのproxy設定だけでは、dockerdがリポジトリ取得を失敗するため、dockerd用にもproxy設定する必要がある。
 
-:::note info
+#### dockerdへのproxy設定なしで実行すると失敗する
+
 試しに、hello-worldイメージをダウンロードして実行してみる。
 
 ```
@@ -733,8 +734,8 @@ WARNING: No blkio throttle.write_iops_device support
 ```
 
 dockerdにproxyの設定がされていないことがわかる。
-:::
 
+#### dockerdへproxy設定するために、管理しているプログラムを探す
 
 dockerdを管理しているプログラムに応じてその設定先が異なるため、dockerdを起動しているプログラムを確認する。
 systemdで動いている場合はsystemctlコマンドに表示されるはず。
@@ -765,7 +766,8 @@ Dec 20 08:58:16 PC_NAME systemd[1]: Started Docker Application Container Engine.
 ```
 
 表示されたので、systemd配下で動いていることがわかった。
-systemd配下に設定を作る。
+
+#### dockerdのproxy設定をsystemd配下に設定を作る
 
 `/etc/systemd/system/docker.serivce`ファイルに書く場合は、すべての設定も記載しなければならない。それを無視してdocker.serviceファイルにproxyだけ書いた場合、dockerが起動しない。
 proxyだけ追加などの用途の場合は、`/etc/systemd/system/docker.service.d/override.conf`に記載する。
@@ -817,8 +819,7 @@ wsl $ sudo systemctl restart docker
  
 無事proxyの設定がされたようだ。
 
-:::note info
-Debianの場合は`service`で動いているらしい。
+#### Debianの場合の管理プログラムはserviceらしい
 
 ```
 wsl $ service --status-all
@@ -840,7 +841,6 @@ wsl $ service --status-all
 export http_proxy="http://10.0.201.201:8080"
 export https_proxy="http://10.0.201.201:8080"
 ```
-:::
 
 
 ### 実行してみる（成功）
