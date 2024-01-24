@@ -499,6 +499,28 @@ wsl $ sudo chmod a+r /etc/apt/keyrings/docker.gpg
 wsl $
 ```
 
+:::note info
+もし`Ubuntu`ではなく`Debian`の場合、`wsl $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg`とすると、apt-get updateで下記のようなエラーが出る。
+
+```
+wsl $ sudo apt-get update
+Hit:1 http://security.debian.org/debian-security bookworm-security InRelease
+Hit:2 http://deb.debian.org/debian bookworm InRelease
+Hit:3 http://deb.debian.org/debian bookworm-updates InRelease
+Hit:4 http://ftp.debian.org/debian bookworm-backports InRelease
+Ign:5 https://download.docker.com/linux/ubuntu bookworm InRelease
+Err:6 https://download.docker.com/linux/ubuntu bookworm Release
+  404  Not Found [IP: 1.23.45.67 8901]
+Reading package lists... Done
+E: The repository 'https://download.docker.com/linux/ubuntu bookworm Release' does not have a Release file.
+N: Updating from such a repository can't be done securely, and is therefore disabled by default.
+N: See apt-secure(8) manpage for repository creation and user configuration details.
+wsl $
+```
+
+Debianの場合は https://docs.docker.com/engine/install/debian/ を参考にする。
+:::
+
 dockerのリポジトリをaptに追加しておく。
 
 ```
@@ -557,6 +579,62 @@ E: Unable to locate package docker-compose-plugin
 ```
 :::
 
+
+### dockerでhello worldしてみる
+
+```
+wsl $ sudo docker run hello-world
+docker: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?.
+See 'docker run --help'.
+```
+
+docker daemonが起動していないかも？　というエラーが出た。
+`docker info`してみると、
+
+```
+wsl $ docker info
+Client: Docker Engine - Community
+  ;
+  ;
+Server:
+ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+errors pretty printing info
+```
+
+となっている。この場合、
+
+```
+wsl $ sudo service docker start
+```
+
+してからもう一度やると良い。
+
+```
+wsl $ docker info
+  ;
+  ;
+Server:
+ERROR: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/info": dial unix /var/run/docker.sock: connect: permission denied
+errors pretty printing info
+```
+
+あれ？　Server部分の情報へのアクセスは不許可になっているので、sudoでもう一度。
+
+```
+wsl $ sudo docker info
+Client: Docker Engine - Community
+  ;
+  ;
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 0
+ Server Version: .....
+```
+
+起動できているようだ。
 
 ### dockerdのためのproxy設定を行う
 
@@ -686,9 +764,10 @@ Dec 20 08:58:16 PC_NAME dockerd[241]: time="2023-12-20T08:58:16.165194500+09:00"
 Dec 20 08:58:16 PC_NAME systemd[1]: Started Docker Application Container Engine.
 ```
 
-表示されたので、systemd配下で動いていることがわかった。systemd配下に設定を作る。
+表示されたので、systemd配下で動いていることがわかった。
+systemd配下に設定を作る。
 
-`/etc/systemd/system/docker.serivce`ファイルに書く場合は、すべての設定も記載しなければならない。docker.serviceファイルにproxyだけ書いた場合、dockerが起動しない。
+`/etc/systemd/system/docker.serivce`ファイルに書く場合は、すべての設定も記載しなければならない。それを無視してdocker.serviceファイルにproxyだけ書いた場合、dockerが起動しない。
 proxyだけ追加などの用途の場合は、`/etc/systemd/system/docker.service.d/override.conf`に記載する。
 
 ```
@@ -738,13 +817,38 @@ wsl $ sudo systemctl restart docker
  
 無事proxyの設定がされたようだ。
 
+:::note info
+Debianの場合は`service`で動いているらしい。
+
+```
+wsl $ service --status-all
+ [ - ]  apparmor
+ [ - ]  cron
+ [ - ]  dbus
+ [ - ]  docker
+ [ ? ]  hwclock.sh
+ [ ? ]  kmod
+ [ ? ]  networking
+ [ - ]  procps
+ [ - ]  sudo
+ [ + ]  udev
+```
+
+`/etc/default/docker`に以下を追加して、`sudo service docker restart`すれば良い。
+
+```
+export http_proxy="http://10.0.201.201:8080"
+export https_proxy="http://10.0.201.201:8080"
+```
+:::
+
 
 ### 実行してみる（成功）
 
 いよいよ起動してみる。
 
 ```
-wsl $ docker run hello-world
+wsl $ sudo docker run hello-world
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
 c1ec31eb5944: Pull complete
@@ -832,6 +936,7 @@ docker:x:999:自分のユーザー名
 ```
 
 設定できているので、ubuntuを再起動するために、いったんexitする。
+※ wslでexitコマンドを打って終了して、改めてUbuntuのアイコンをクリックして起動する、というだけでも動くので、これで良いような気がする。
 
 ```
 wsl $ exit
