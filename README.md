@@ -33,6 +33,7 @@ Docker version 24.0.7, build afdd53b
 > Debianでの差異も記述してあります。
 > 
 > $ cat /etc/os-release
+> 
 > PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
 >   ;
 
