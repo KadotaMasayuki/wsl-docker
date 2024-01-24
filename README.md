@@ -82,7 +82,7 @@ export https_proxy=http://1.23.45.67.8901
 EOS
 
 # .profile読み直し
-source
+source .profile
 
 # apt用のproxy設定
 cat << EOS | sudo tee -a /etc/apt/apt.conf.d/proxy.conf
@@ -112,6 +112,11 @@ sudo apt-get install ca-certificates curl gnupg
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+:::note info
+Debianのときは上記gpgの入手先が異なり、上記のままでやると`apt-get update`が失敗するので、公式のDebianのページを確認。
+https://docs.docker.com/engine/install/debian/
+:::
 
 # dockerのリポジトリをaptに追加する
 echo \
